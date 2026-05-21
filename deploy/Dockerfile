@@ -60,6 +60,10 @@ COPY src/ .
 # 用 frontend stage 构建的 minified CSS 覆盖 git 中的版本（确保 prod 总是最新构建）
 COPY --from=frontend /frontend/static/css/output.css /app/static/css/output.css
 
+# tools.yaml 烤进镜像：K8s 无 bind mount（compose 才挂 ../config:/config）；
+# 路径 /config 对齐 settings 默认 TOOLS_YAML_PATH（BASE_DIR.parent/config/tools.yaml = /config/tools.yaml）
+COPY config /config
+
 EXPOSE 8000
 
 # 默认 entrypoint：dev runserver；compose 内可 override

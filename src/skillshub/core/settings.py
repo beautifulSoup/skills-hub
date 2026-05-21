@@ -109,6 +109,8 @@ UNFOLD = {
 MIDDLEWARE = [
     "skillshub.core.middleware.RequestIdMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    # WhiteNoise：DEBUG=False 下由 gunicorn 直接 serve 静态（K8s 无 nginx sidecar）
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -168,6 +170,11 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# WhiteNoise 压缩存储（不带 manifest 哈希，避免引用缺失导致 500；prod 由 gunicorn serve）
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
 
 # === Storage (T3) ===
 STORAGE_BACKEND = env("STORAGE_BACKEND", default="local")
@@ -221,6 +228,14 @@ else:
     EMAIL_USE_TLS = not EMAIL_USE_SSL
 DEFAULT_FROM_EMAIL = env("SMTP_FROM", default="") or "noreply@skills-hub.local"
 BASE_URL = env("BASE_URL", default="http://localhost:8000")
+
+# === 反向代理 / Ingress（TLS 在入口终止，转发到容器是 http）===
+# 让 Django 信任入口域名的跨源 POST（admin/登录），并据 X-Forwarded-Proto 识别 https
+CSRF_TRUSTED_ORIGINS = [BASE_URL]
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+if not DEBUG and not env.bool("TEST_USE_SQLITE", default=False):
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # === Tools (T4) ===
 TOOLS_YAML_PATH = env("TOOLS_YAML_PATH") or str(BASE_DIR.parent / "config" / "tools.yaml")
