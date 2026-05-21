@@ -1,0 +1,147 @@
+{% load static %}<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>{{ path }} — {{ version.skill.name }} v{{ version.version_no }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% if mode == "code" %}
+{# highlight.js + GitHub 主题（CDN，纯静态资源） #}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/styles/github.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.10.0/build/highlight.min.js"></script>
+{% endif %}
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB",
+                 "Microsoft YaHei", sans-serif;
+    color: #1f2937;
+    background: #f9fafb;
+    line-height: 1.55;
+  }
+  header {
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .crumbs { font-size: 13px; color: #6b7280; }
+  .crumbs strong { color: #111827; font-weight: 600; }
+  .path-tag {
+    display: inline-block;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: #111827;
+    margin-left: 6px;
+    word-break: break-all;
+  }
+  .size { font-size: 12px; color: #9ca3af; margin-left: 8px; }
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #9333ea;
+    color: #fff;
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .btn-download:hover { background: #7e22ce; }
+
+  main { padding: 24px; }
+  .panel {
+    max-width: 980px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.03);
+    overflow: hidden;
+  }
+  .panel-body { padding: 24px 32px; }
+  pre.code-block {
+    margin: 0;
+    padding: 18px 20px;
+    background: #f6f8fa;
+    overflow-x: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  pre.code-block code.hljs { padding: 0; background: transparent; }
+
+  /* Markdown 内容样式 */
+  .md h1 { font-size: 1.6em; margin: 0 0 .6em; padding-bottom: .3em; border-bottom: 1px solid #e5e7eb; }
+  .md h2 { font-size: 1.35em; margin: 1.5em 0 .5em; padding-bottom: .3em; border-bottom: 1px solid #e5e7eb; }
+  .md h3 { font-size: 1.15em; margin: 1.3em 0 .4em; }
+  .md p, .md ul, .md ol { margin: .6em 0; }
+  .md ul, .md ol { padding-left: 2em; }
+  .md code {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.88em;
+  }
+  .md pre {
+    background: #f6f8fa;
+    padding: 14px 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.88em;
+  }
+  .md pre code { background: transparent; padding: 0; }
+  .md blockquote {
+    border-left: 4px solid #d1d5db;
+    margin: .8em 0;
+    padding: .2em 1em;
+    color: #4b5563;
+  }
+  .md table { border-collapse: collapse; margin: .8em 0; }
+  .md th, .md td { border: 1px solid #e5e7eb; padding: 6px 10px; font-size: .92em; }
+  .md th { background: #f9fafb; }
+  .md a { color: #9333ea; text-decoration: underline; }
+  .md img { max-width: 100%; }
+</style>
+</head>
+<body>
+<header>
+  <div class="crumbs">
+    <strong>{{ version.skill.name }} v{{ version.version_no }}</strong>
+    <span class="path-tag">{{ path }}</span>
+    <span class="size">{{ size_human }}</span>
+  </div>
+  <a class="btn-download" href="{{ download_url }}">⬇ 下载文件</a>
+</header>
+
+<main>
+  <div class="panel">
+    {% if mode == "markdown" %}
+      <div class="panel-body md">
+        {{ rendered_html|safe }}
+      </div>
+    {% else %}
+      <pre class="code-block"><code class="language-{{ language }}">{{ raw }}</code></pre>
+    {% endif %}
+  </div>
+</main>
+
+{% if mode == "code" %}
+<script>hljs.highlightAll();</script>
+{% endif %}
+</body>
+</html>

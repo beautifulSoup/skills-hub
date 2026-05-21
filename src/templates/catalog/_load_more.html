@@ -1,0 +1,13 @@
+{% for skill in skills %}
+  {% include "catalog/_card.html" with skill=skill %}
+{% endfor %}
+{% if has_next %}
+<div id="load-more-wrap" class="flex justify-center col-span-full mt-4">
+  <button
+    class="px-5 py-2 text-sm bg-base-100 border border-base-300 rounded-md hover:bg-base-200 transition"
+    hx-get="?page={{ next_page }}{% if q %}&q={{ q|urlencode }}{% endif %}{% for t in tags %}&tags={{ t|urlencode }}{% endfor %}&sort={{ sort }}"
+    hx-target="#load-more-wrap"
+    hx-swap="outerHTML"
+  >加载更多</button>
+</div>
+{% endif %}

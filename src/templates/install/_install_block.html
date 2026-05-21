@@ -1,0 +1,132 @@
+{% load static %}
+<section class="install-block bg-base-100 border border-base-300 rounded-xl p-5 mb-6"
+         x-data='installBlock({
+           tool: "{{ default_tool }}",
+           os: "{{ default_os }}",
+           method: "cli",
+           tools: {{ tools_json|safe }},
+           paths: {{ paths_json|safe }},
+           token: "{{ version.download_token|default:"" }}",
+           skillName: "{{ skill.name }}",
+           originUrl: "{{ origin_url }}"
+         })'>
+  <h2 class="font-semibold text-base mb-4">📦 安装</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+    <div>
+      <label class="block text-xs text-base-content/50 mb-1.5">工具</label>
+      <select x-model="tool" class="w-full px-3 py-1.5 text-sm bg-base-100 border border-base-300 rounded-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+        <template x-for="t in tools" :key="t.id">
+          <option :value="t.id" x-text="t.name"></option>
+        </template>
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs text-base-content/50 mb-1.5">操作系统</label>
+      <select x-model="os" class="w-full px-3 py-1.5 text-sm bg-base-100 border border-base-300 rounded-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+        <option value="linux">Linux</option>
+        <option value="macos">macOS</option>
+        <option value="windows">Windows</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs text-base-content/50 mb-1.5">方式</label>
+      <div class="flex items-center gap-1 bg-base-200 border border-base-300 rounded-md p-1">
+        <button type="button"
+                @click="method='cli'"
+                :class="method==='cli' ? 'bg-primary text-primary-content font-medium' : 'text-base-content/60 hover:text-base-content'"
+                class="flex-1 px-2 py-1 text-xs rounded">CLI</button>
+        <button type="button"
+                @click="method='ai_paste'"
+                :class="method==='ai_paste' ? 'bg-primary text-primary-content font-medium' : 'text-base-content/60 hover:text-base-content'"
+                class="flex-1 px-2 py-1 text-xs rounded">AI 提示词</button>
+        <button type="button"
+                @click="method='manual'"
+                :class="method==='manual' ? 'bg-primary text-primary-content font-medium' : 'text-base-content/60 hover:text-base-content'"
+                class="flex-1 px-2 py-1 text-xs rounded">手动</button>
+      </div>
+    </div>
+  </div>
+
+  <div x-show="method==='cli'">{% include "install/_cli_panel.html" %}</div>
+  <div x-show="method==='ai_paste'">{% include "install/_ai_paste_panel.html" %}</div>
+  <div x-show="method==='manual'">{% include "install/_manual_panel.html" %}</div>
+</section>
+
+<script>
+function installBlock(init) {
+  return {
+    ...init,
+    copiedKey: null,
+    copyError: null,
+    _copyTimer: null,
+    get targetPath() {
+      return this.paths[this.tool][this.os] || '';
+    },
+    get targetParent() {
+      const p = this.targetPath.replace(/[/\\]+$/, '');
+      const idx = Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\'));
+      if (idx <= 0) return p;
+      const sep = p.charAt(idx);
+      return p.slice(0, idx) + sep;
+    },
+    get cliCommand() {
+      if (this.os === 'windows') {
+        return `irm ${this.originUrl}/install/${this.token}.ps1?tool=${this.tool} | iex`;
+      }
+      return `curl -fsSL "${this.originUrl}/install/${this.token}.sh?tool=${this.tool}&os=${this.os}" | bash`;
+    },
+    get aiPasteText() {
+      const toolName = (this.tools.find(t => t.id === this.tool) || {}).name || this.tool;
+      return [
+        `请帮我把一个 skill 安装到 ${toolName}，严格按下面步骤执行，不要跳过安全审查：`,
+        ``,
+        `1. 从这个地址下载 skill 压缩包（zip）：${this.manualZipUrl}`,
+        `2. 解压到临时目录，列出其中所有文件。`,
+        `3. 安全审查：逐个文件检查内容，重点排查：`,
+        `   - 从远程地址下载并直接执行脚本（curl/wget 管道到 bash、PowerShell iex 远程执行等）`,
+        `   - 读取或外传敏感信息（~/.ssh、环境变量、token/密钥、浏览器/钱包数据等）`,
+        `   - 破坏性操作（rm -rf、磁盘格式化、覆盖或删除系统/用户文件）`,
+        `   - 经混淆或编码隐藏的代码（base64/hex 后 eval/exec）`,
+        `   - 向陌生域名/IP 的网络外联`,
+        `   - 与该 skill 声称功能明显不符的多余权限或操作`,
+        `4. 处置：`,
+        `   - 没发现可疑内容：直接把解压后的内容安装到：${this.targetPath}（保持原目录结构）`,
+        `   - 发现可疑内容：不要直接拒绝。请列出每条可疑点（文件名 + 行号/片段 + 为何可疑），问我"是否仍要继续安装？"。我确认后再安装到上面目录；我拒绝则删除临时文件、不安装。`,
+        `5. 安装完成后，告诉我装到了哪个目录、包含哪些文件，以及审查结论。`,
+      ].join('\n');
+    },
+    get manualZipUrl() {
+      return `${this.originUrl}/install/${this.token}/zip`;
+    },
+    async copyText(text, key) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          if (!ok) throw new Error('execCommand copy failed');
+        }
+        this.copyError = null;
+        this.copiedKey = key || 'default';
+      } catch (e) {
+        this.copiedKey = null;
+        this.copyError = key || 'default';
+      }
+      if (this._copyTimer) clearTimeout(this._copyTimer);
+      this._copyTimer = setTimeout(() => {
+        this.copiedKey = null;
+        this.copyError = null;
+      }, 1800);
+    },
+  };
+}
+</script>

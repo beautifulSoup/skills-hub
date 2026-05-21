@@ -1,0 +1,6 @@
+- id: bad-tool
+  name: Bad Tool
+  supports: [foo]
+  paths:
+    foo: ~/some/path/
+  install_methods: [cli]

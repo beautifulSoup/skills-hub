@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Skill 仓库 — skills-hub{% endblock %}
+
+{% block content %}
+<section class="border-b border-base-300">
+  <div class="container mx-auto px-6 py-16 text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1 mb-5 bg-primary/5 border border-primary/15 rounded-full text-xs text-primary">
+      <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+      企业私有 · 实时更新
+    </div>
+    <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.05] mb-4">
+      Skill 仓库
+    </h1>
+    <p class="text-base text-base-content/60 max-w-2xl mx-auto">
+      浏览同事写的 Claude Code / WorkBuddy skill，按岗位即装即用。
+    </p>
+  </div>
+</section>
+
+<section class="border-b border-base-300 bg-base-100">
+  <div class="container mx-auto px-6 py-4 flex items-center gap-4 flex-wrap">
+    <form method="get" action="{% url 'catalog_list' %}" class="relative flex-1 min-w-[220px] max-w-md">
+      <input type="hidden" name="sort" value="{{ sort }}">
+      {% for t in tags %}<input type="hidden" name="tags" value="{{ t }}">{% endfor %}
+      <svg class="absolute left-3 top-2.5 w-4 h-4 text-base-content/40 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="m21 21-4.35-4.35M17 11a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z"/></svg>
+      <input
+        type="search"
+        name="q"
+        value="{{ q }}"
+        placeholder="搜索 skill name / description..."
+        class="input input-bordered input-sm w-full pl-9"
+      >
+    </form>
+
+    <div class="flex items-center gap-1 bg-base-200 border border-base-300 rounded-md p-1 ml-auto">
+      {% for opt in sort_options %}
+        <a
+          href="?sort={{ opt }}{% if q %}&q={{ q|urlencode }}{% endif %}{% for t in tags %}&tags={{ t|urlencode }}{% endfor %}"
+          class="px-3 py-1 text-xs rounded {% if sort == opt %}bg-primary text-primary-content font-medium{% else %}text-base-content/60 hover:text-base-content{% endif %}"
+        >{% if opt == 'newest' %}最新发布{% elif opt == 'updated' %}最近更新{% else %}安装次数{% endif %}</a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="container mx-auto px-6 py-8">
+  {% if skills %}
+    <div id="skill-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {% for skill in skills %}
+        {% include "catalog/_card.html" with skill=skill %}
+      {% endfor %}
+      {% if has_next %}
+        <div id="load-more-wrap" class="flex justify-center col-span-full mt-4">
+          <button
+            class="px-5 py-2 text-sm bg-base-100 border border-base-300 rounded-md hover:bg-base-200 transition"
+            hx-get="?page={{ next_page }}{% if q %}&q={{ q|urlencode }}{% endif %}{% for t in tags %}&tags={{ t|urlencode }}{% endfor %}&sort={{ sort }}"
+            hx-target="#load-more-wrap"
+            hx-swap="outerHTML"
+          >加载更多</button>
+        </div>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="max-w-md mx-auto text-center py-16">
+      <div class="w-12 h-12 mx-auto mb-4 rounded-lg bg-base-200 flex items-center justify-center">
+        <svg class="w-6 h-6 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z"/></svg>
+      </div>
+      <p class="text-base-content/60">
+        {% if q or tags %}没有匹配结果{% else %}暂无已发布 skill{% endif %}
+      </p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

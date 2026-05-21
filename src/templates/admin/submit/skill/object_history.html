@@ -1,0 +1,83 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}{{ original.name }} 历史{% endblock %}
+
+{% block content %}
+{# 顶部摘要 #}
+<div class="bg-white border border-base-200 mb-6 px-5 py-4 rounded-default shadow-xs dark:bg-base-900 dark:border-base-800">
+    <div class="flex flex-row items-center justify-between gap-4">
+        <h2 class="font-semibold text-base text-important tracking-tight">操作历史</h2>
+        <p class="text-sm text-subtle">
+            共 {{ total_count }} 条事件
+            {% if paginator.num_pages > 1 %} · 第 {{ page_obj.number }} / {{ paginator.num_pages }} 页{% endif %}
+        </p>
+    </div>
+</div>
+
+{% if events %}
+<div class="bg-white border border-base-200 rounded-default shadow-xs overflow-x-auto dark:bg-base-900 dark:border-base-800">
+    <table class="w-full">
+        <thead class="bg-base-50 border-b border-base-200 dark:bg-base-800 dark:border-base-700">
+            <tr class="text-base-900 dark:text-base-100">
+                <th class="font-medium px-3 py-2.5 text-left text-sm whitespace-nowrap">时间</th>
+                <th class="font-medium px-3 py-2.5 text-left text-sm whitespace-nowrap">类型</th>
+                <th class="font-medium px-3 py-2.5 text-left text-sm whitespace-nowrap">版本</th>
+                <th class="font-medium px-3 py-2.5 text-left text-sm whitespace-nowrap">操作人</th>
+                <th class="font-medium px-3 py-2.5 text-left text-sm">详情</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in events %}
+            <tr class="border-t border-base-200 dark:border-base-800">
+                <td class="px-3 py-2.5 text-sm align-top whitespace-nowrap text-default font-mono">
+                    {{ e.ts|date:"Y-m-d H:i:s" }}
+                </td>
+                <td class="px-3 py-2.5 text-sm align-top whitespace-nowrap">
+                    {% if e.type_color == "green" %}
+                        <span class="bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-default text-xs font-medium">{{ e.type }}</span>
+                    {% elif e.type_color == "red" %}
+                        <span class="bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-default text-xs font-medium">{{ e.type }}</span>
+                    {% elif e.type_color == "yellow" %}
+                        <span class="bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 px-2 py-0.5 rounded-default text-xs font-medium">{{ e.type }}</span>
+                    {% elif e.type_color == "primary" %}
+                        <span class="bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-300 px-2 py-0.5 rounded-default text-xs font-medium">{{ e.type }}</span>
+                    {% else %}
+                        <span class="bg-base-100 dark:bg-base-700 text-default px-2 py-0.5 rounded-default text-xs font-medium">{{ e.type }}</span>
+                    {% endif %}
+                </td>
+                <td class="px-3 py-2.5 text-sm align-top whitespace-nowrap text-default">
+                    {% if e.version_no %}v{{ e.version_no }}{% else %}<span class="text-subtle">—</span>{% endif %}
+                </td>
+                <td class="px-3 py-2.5 text-sm align-top whitespace-nowrap text-default">{{ e.actor }}</td>
+                <td class="px-3 py-2.5 text-sm align-top text-default break-words">{{ e.detail }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if paginator.num_pages > 1 %}
+<nav class="flex flex-row items-center justify-between mt-4 px-1">
+    <p class="text-sm text-subtle">第 {{ page_obj.number }} / {{ paginator.num_pages }} 页 · 共 {{ total_count }} 条</p>
+    <div class="flex flex-row gap-1">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}"
+               class="border border-base-200 bg-white dark:bg-base-900 dark:border-base-700 hover:bg-base-100 dark:hover:bg-base-800 px-3 py-1.5 rounded-default text-sm text-default">上一页</a>
+        {% else %}
+            <span class="border border-base-200 bg-base-50 dark:bg-base-900 dark:border-base-700 cursor-not-allowed px-3 py-1.5 rounded-default text-sm text-subtle">上一页</span>
+        {% endif %}
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}"
+               class="border border-base-200 bg-white dark:bg-base-900 dark:border-base-700 hover:bg-base-100 dark:hover:bg-base-800 px-3 py-1.5 rounded-default text-sm text-default">下一页</a>
+        {% else %}
+            <span class="border border-base-200 bg-base-50 dark:bg-base-900 dark:border-base-700 cursor-not-allowed px-3 py-1.5 rounded-default text-sm text-subtle">下一页</span>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}
+{% else %}
+<div class="bg-white border border-base-200 px-5 py-8 rounded-default shadow-xs dark:bg-base-900 dark:border-base-800">
+    <p class="text-center text-sm text-subtle">暂无历史记录。</p>
+</div>
+{% endif %}
+{% endblock %}

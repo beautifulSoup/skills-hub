@@ -1,0 +1,21 @@
+<div class="space-y-2">
+  <div class="flex items-start gap-2">
+    <pre class="flex-1 bg-base-200 border border-base-300 rounded-md p-3 text-xs font-mono overflow-x-auto" x-text="cliCommand"></pre>
+    <button type="button"
+            @click="copyText(cliCommand, 'cli')"
+            :class="copiedKey==='cli' ? 'bg-success text-success-content' : (copyError==='cli' ? 'bg-error text-error-content' : 'bg-primary text-primary-content')"
+            class="px-3 py-2 text-xs rounded-md hover:opacity-90 transition flex-shrink-0 min-w-[5.5rem] text-center">
+      <span x-show="copiedKey!=='cli' && copyError!=='cli'">📋 复制</span>
+      <span x-show="copiedKey==='cli'" x-cloak>✓ 已复制</span>
+      <span x-show="copyError==='cli'" x-cloak>× 失败</span>
+    </button>
+  </div>
+  <p class="text-xs text-base-content/50">
+    复制后粘贴到 terminal（或者粘到 AI 工具对话框让 AI 帮你跑）。
+  </p>
+
+  <div x-show="os==='windows'" x-cloak class="text-xs bg-warning/5 border border-warning/30 rounded-md px-3 py-2 leading-relaxed">
+    <strong class="text-warning">💡 Windows 用户：</strong>
+    请在 <strong>PowerShell</strong>（不是 cmd 命令提示符）里执行。<kbd class="font-mono px-1 py-0.5 bg-base-200 border border-base-300 rounded text-[10px]">Win</kbd>+<kbd class="font-mono px-1 py-0.5 bg-base-200 border border-base-300 rounded text-[10px]">R</kbd> 输入 <code>powershell</code> 即可打开。<code>irm</code> / <code>iex</code> 是 PowerShell 内置命令，cmd 里跑不通。
+  </div>
+</div>

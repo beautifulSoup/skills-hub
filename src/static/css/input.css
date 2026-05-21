@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@plugin "daisyui" {
+  themes: ["light --default", "corporate"];
+}
+
+@plugin "daisyui/theme" {
+  name: "skillshub";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(98% 0.005 286);
+  --color-base-300: oklch(94% 0.008 286);
+  --color-base-content: oklch(20% 0.01 286);
+
+  --color-primary: oklch(53% 0.22 290);
+  --color-primary-content: oklch(99% 0 0);
+  --color-secondary: oklch(60% 0.18 320);
+  --color-secondary-content: oklch(99% 0 0);
+  --color-accent: oklch(70% 0.18 200);
+  --color-accent-content: oklch(20% 0 0);
+  --color-neutral: oklch(28% 0.01 286);
+  --color-neutral-content: oklch(98% 0 0);
+
+  --color-info: oklch(70% 0.14 230);
+  --color-info-content: oklch(99% 0 0);
+  --color-success: oklch(70% 0.15 160);
+  --color-success-content: oklch(99% 0 0);
+  --color-warning: oklch(80% 0.17 75);
+  --color-warning-content: oklch(20% 0 0);
+  --color-error: oklch(63% 0.21 25);
+  --color-error-content: oklch(99% 0 0);
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@source "../../templates";
+@source "../../skillshub";

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}我的 Skill — skills-hub{% endblock %}
+
+{% block content %}
+<section class="border-b border-base-300">
+  <div class="container mx-auto px-6 py-12">
+    <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-3">我的 Skill</h1>
+    <p class="text-sm text-base-content/60">
+      你创建的全部 skill，包含已发布、待审核、被拒绝等所有状态。
+    </p>
+  </div>
+</section>
+
+<section class="container mx-auto px-6 py-8">
+  {% if skills %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {% for skill in skills %}
+        <a href="{% url 'my_skill_detail' name=skill.name %}"
+           class="group flex flex-col h-60 bg-base-100 border border-base-300 rounded-xl p-5 hover:border-primary/30 hover:shadow-[0_6px_24px_rgba(124,58,237,0.10)] hover:-translate-y-0.5 transition">
+          <div class="flex items-start justify-between mb-4">
+            <div class="w-11 h-11 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center">
+              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m16 18 6-6-6-6M8 6l-6 6 6 6"/>
+              </svg>
+            </div>
+            {% if skill.recent_version_no %}
+              <span class="font-mono text-xs text-base-content/40">v{{ skill.recent_version_no }}</span>
+            {% endif %}
+          </div>
+          <h2 class="font-semibold mb-1.5 text-base-content group-hover:text-primary transition line-clamp-1">{{ skill.name }}</h2>
+          <p class="text-sm text-base-content/60 mb-3 line-clamp-1">{{ skill.description }}</p>
+          <div class="h-5 mb-3 overflow-hidden">
+            {% if skill.tags %}
+              <div class="flex flex-nowrap gap-1.5">
+                {% for tag in skill.tags %}
+                  <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-primary/5 text-primary whitespace-nowrap flex-shrink-0">{{ tag }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="flex items-center justify-between text-xs text-base-content/50 pt-3 border-t border-base-200 mt-auto">
+            <div class="flex items-center gap-1.5">
+              {% if skill.recent_status == 'published' %}
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-success/10 text-success border border-success/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-success"></span>已发布
+                </span>
+              {% elif skill.recent_status == 'pending_machine' %}
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-info/10 text-info border border-info/20">机审中</span>
+              {% elif skill.recent_status == 'pending_review' %}
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-info/10 text-info border border-info/20">待管理员审核</span>
+              {% elif skill.recent_status == 'changes_requested' %}
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-warning/10 text-warning border border-warning/20">需修改</span>
+              {% elif skill.recent_status == 'rejected' %}
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-error/10 text-error border border-error/20">已拒绝</span>
+              {% elif skill.recent_status == 'cancelled' %}
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-base-200 text-base-content/60 border border-base-300">已取消</span>
+              {% endif %}
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-warning">⚡ {{ skill.install_count }}</span>
+              <span class="font-mono">{{ skill.created_at|date:"Y-m-d" }}</span>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="max-w-md mx-auto text-center py-16">
+      <div class="w-12 h-12 mx-auto mb-4 rounded-lg bg-base-200 flex items-center justify-center">
+        <svg class="w-6 h-6 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+      </div>
+      <p class="text-base-content/60 mb-3">你还没有提交过 skill</p>
+      <a href="/submit/" class="text-sm text-primary hover:underline">提交第一个 Skill →</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

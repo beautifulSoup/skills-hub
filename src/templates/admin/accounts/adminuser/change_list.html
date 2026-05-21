@@ -1,0 +1,19 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls admin_list unfold %}
+
+{# 右上角原生 + 号去掉 —— add button 已搬到 search 同一行 #}
+{% block object-tools %}{% endblock %}
+
+{% block search %}
+    <div class="flex flex-row items-center gap-3 w-full">
+        <div class="grow">
+            {% search_form cl %}
+        </div>
+        {% if has_add_permission %}
+            {% url cl.opts|admin_urlname:"add" as add_url %}
+            {% component "unfold/components/button.html" with href=add_url %}
+                新增管理员
+            {% endcomponent %}
+        {% endif %}
+    </div>
+{% endblock %}

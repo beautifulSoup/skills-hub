@@ -1,0 +1,26 @@
+<div class="space-y-3">
+  <a :href="manualZipUrl"
+     class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-primary text-primary-content font-medium rounded-md hover:opacity-90 transition">
+    📥 下载 zip
+  </a>
+  <div class="bg-base-200 border border-base-300 rounded-md p-3 text-xs space-y-3">
+    <ol class="list-decimal list-inside space-y-1.5 text-base-content/80 leading-relaxed">
+      <li>解压下载的 zip，得到一个名为 <code class="text-primary" x-text="skillName"></code> 的文件夹</li>
+      <li>
+        把该文件夹整体复制 / 移动到这个目录下：
+        <code class="block mt-1 text-primary font-mono" x-text="targetParent"></code>
+      </li>
+      <li>
+        确认最终结构是这样（含 <code>SKILL.md</code>）：
+        <code class="block mt-1 text-primary font-mono text-[11px]" x-text="targetPath + 'SKILL.md'"></code>
+      </li>
+    </ol>
+
+    <p x-show="os==='macos'" x-cloak class="text-base-content/50">
+      💡 <code>~</code> 是你的用户目录（<code>/Users/你的用户名</code>）。Finder 里按 <kbd class="font-mono px-1 py-0.5 bg-base-100 border border-base-300 rounded text-[10px]">Cmd</kbd>+<kbd class="font-mono px-1 py-0.5 bg-base-100 border border-base-300 rounded text-[10px]">Shift</kbd>+<kbd class="font-mono px-1 py-0.5 bg-base-100 border border-base-300 rounded text-[10px]">G</kbd> 粘第 2 步的目录路径可直接跳转过去（<code>.claude</code> 是隐藏目录，正常浏览看不到）。
+    </p>
+    <p x-show="os==='windows'" x-cloak class="text-base-content/50">
+      💡 <code>%USERPROFILE%</code> 是 Windows 用户目录变量，相当于 <code>C:\Users\你的用户名</code>。把第 2 步的目录路径粘到文件资源管理器地址栏可自动展开跳转。
+    </p>
+  </div>
+</div>

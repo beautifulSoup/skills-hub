@@ -1,0 +1,14 @@
+- id: claude-code
+  name: Claude Code
+  supports: [skill, subagent]
+  paths:
+    skill: ~/.claude/skills/{name}/
+    subagent: ~/.claude/agents/{name}.md
+  install_methods: [cli, ai_paste, manual]
+
+- id: workbuddy
+  name: WorkBuddy
+  supports: [skill]
+  paths:
+    skill: ~/.workbuddy/skills/{name}/
+  install_methods: [cli, ai_paste, manual]

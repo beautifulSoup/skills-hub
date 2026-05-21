@@ -1,0 +1,56 @@
+{% extends 'admin/base.html' %}
+
+{% load i18n admin_extras %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+{% admin_dashboard_stats as stats %}
+
+<div class="border border-base-200 rounded-default bg-white dark:bg-base-800 dark:border-base-700 p-6">
+    <h2 class="text-lg font-semibold text-font-important-light dark:text-font-important-dark mb-2">
+        欢迎，{{ request.user.email }}
+    </h2>
+    <p class="text-sm text-font-default-light dark:text-font-default-dark mb-6">
+        平台运行总览。点「待审核 Skill 数」可跳到审核列表。
+    </p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {# 待审核 Skill 数 — 可点击跳审核列表 #}
+        <a href="{% url 'admin:submit_pendingskillversion_changelist' %}"
+           class="block p-5 border border-base-200 dark:border-base-700 rounded-default hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-sm transition group">
+            <div class="text-xs text-font-subtle-light dark:text-font-subtle-dark mb-2 flex items-center justify-between">
+                <span>待审核 Skill 数</span>
+                <span class="text-primary-600 dark:text-primary-400 opacity-0 group-hover:opacity-100 transition">→</span>
+            </div>
+            <div class="text-4xl font-bold text-primary-600 dark:text-primary-400">{{ stats.pending_skills }}</div>
+            <div class="text-xs text-font-default-light dark:text-font-default-dark mt-2">机审通过、等审核员处理</div>
+        </a>
+
+        {# 全站 Skill 总数 #}
+        <div class="block p-5 border border-base-200 dark:border-base-700 rounded-default">
+            <div class="text-xs text-font-subtle-light dark:text-font-subtle-dark mb-2">全站 Skill 总数</div>
+            <div class="text-4xl font-bold text-font-important-light dark:text-font-important-dark">{{ stats.total_skills }}</div>
+            <div class="text-xs text-font-default-light dark:text-font-default-dark mt-2">累计创建的 Skill 数</div>
+        </div>
+
+        {# 全站下载总次数 #}
+        <div class="block p-5 border border-base-200 dark:border-base-700 rounded-default">
+            <div class="text-xs text-font-subtle-light dark:text-font-subtle-dark mb-2">全站下载总次数</div>
+            <div class="text-4xl font-bold text-font-important-light dark:text-font-important-dark">{{ stats.total_installs }}</div>
+            <div class="text-xs text-font-default-light dark:text-font-default-dark mt-2">所有 Skill install_count 之和</div>
+        </div>
+
+        {# 总用户量 #}
+        <div class="block p-5 border border-base-200 dark:border-base-700 rounded-default">
+            <div class="text-xs text-font-subtle-light dark:text-font-subtle-dark mb-2">总用户量</div>
+            <div class="text-4xl font-bold text-font-important-light dark:text-font-important-dark">{{ stats.total_users }}</div>
+            <div class="text-xs text-font-default-light dark:text-font-default-dark mt-2">含管理员 + 普通用户</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

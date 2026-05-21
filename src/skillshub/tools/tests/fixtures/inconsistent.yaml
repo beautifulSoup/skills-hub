@@ -1,0 +1,6 @@
+- id: bad-tool
+  name: Bad Tool
+  supports: [skill, subagent]
+  paths:
+    skill: ~/some/path/
+  install_methods: [cli]

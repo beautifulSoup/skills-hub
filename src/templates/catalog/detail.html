@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load version_tags %}
+
+{% block title %}{{ skill.name }} — skills-hub{% endblock %}
+
+{% block content %}
+<section class="border-b border-base-300 bg-base-100">
+  <div class="container mx-auto px-6 py-10">
+    <nav class="text-sm mb-5">
+      <a href="{% url 'catalog_list' %}" class="text-base-content/60 hover:text-primary">← Skill 仓库</a>
+      <span class="text-base-content/30 mx-2">/</span>
+      <span class="text-base-content">{{ skill.name }}</span>
+    </nav>
+
+    <div class="flex items-start gap-4 mb-4">
+      <div class="w-14 h-14 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center flex-shrink-0">
+        <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m16 18 6-6-6-6M8 6l-6 6 6 6"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <h1 class="text-3xl font-bold tracking-tight mb-1">{{ skill.name }}</h1>
+        <p class="text-base-content/60">{{ skill.description }}</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 flex-wrap">
+      {% version_dropdown skill version %}
+      <span class="text-xs text-base-content/50 font-mono">
+        当前版本: v{{ version.version_no }}
+      </span>
+    </div>
+  </div>
+</section>
+
+{# 作者本人看自己 pending 版本时显示状态 banner #}
+{% if version.status != "published" %}
+<section class="container mx-auto px-6 pt-6">
+  <div class="bg-warning/10 border border-warning/30 rounded-xl p-4 flex items-start gap-3">
+    <svg class="w-5 h-5 text-warning flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.732 0 2.815-1.874 1.949-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+    </svg>
+    <div class="flex-1 text-sm">
+      <p class="font-medium text-warning-content/90 mb-1">本版本 <span class="font-mono">{{ version.get_status_display }}</span>，仅作者本人可见</p>
+      <p class="text-base-content/60">
+        {% if version.status == "pending_machine" %}机审队列处理中，通过后自动进入人审。
+        {% elif version.status == "pending_review" %}已通过机审，等待审核员人工 review。
+        {% elif version.status == "changes_requested" %}审核员要求修改，请取消当前版本后重新提交。
+        {% endif %}
+        发布后才会出现在 Skill 仓库列表。
+      </p>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# T10: 安装区块（hero 下方、README 上方）— 仅 published 版本显示 #}
+{% if version.status == "published" %}
+<section class="container mx-auto px-6 pt-6">
+  {% include "install/_install_block.html" %}
+</section>
+{% endif %}
+
+<section class="container mx-auto px-6 py-8">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <article class="lg:col-span-2 prose prose-sm max-w-none bg-base-100 border border-base-300 rounded-xl p-6">
+      {{ readme_html|safe }}
+    </article>
+
+    <aside class="space-y-4">
+      <div class="bg-base-100 border border-base-300 rounded-xl p-5 space-y-2 text-sm">
+        <h3 class="font-semibold mb-3">详情</h3>
+        <div><span class="text-base-content/50">作者：</span>{{ version.submitted_by.email }}</div>
+        <div><span class="text-base-content/50">提交时间：</span><span class="font-mono">{{ version.submitted_at|date:"Y-m-d H:i" }}</span></div>
+        {% if version.published_at %}
+          <div><span class="text-base-content/50">发布时间：</span><span class="font-mono">{{ version.published_at|date:"Y-m-d H:i" }}</span></div>
+        {% endif %}
+        <div><span class="text-base-content/50">⚡ 安装次数：</span><span class="text-warning font-medium">{{ skill.install_count }}</span></div>
+      </div>
+
+      {% if skill.tags %}
+      <div class="bg-base-100 border border-base-300 rounded-xl p-5">
+        <h3 class="font-semibold text-sm mb-3">标签</h3>
+        <div class="flex flex-wrap gap-1.5">
+          {% for tag in skill.tags %}
+            <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-primary/5 text-primary">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if version.violations %}
+      <div class="bg-base-100 border border-base-300 rounded-xl p-5">
+        <h3 class="font-semibold text-sm mb-2">机审摘要</h3>
+        <p class="text-xs text-base-content/60">本版本通过人审 ({{ version.violations|length }} 项 violation 已审核确认)</p>
+      </div>
+      {% endif %}
+    </aside>
+  </div>
+</section>
+{% endblock %}

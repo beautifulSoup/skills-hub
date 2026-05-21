@@ -1,0 +1,6 @@
+您提交的 {{ skill_name }} v{{ version_no }} 未通过审核。
+
+原因：
+{{ reason }}
+
+详情：{{ review_url }}

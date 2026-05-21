@@ -1,0 +1,3 @@
+恭喜，您提交的 {{ skill_name }} v{{ version_no }} 已通过审核并发布。
+
+详情：{{ review_url }}

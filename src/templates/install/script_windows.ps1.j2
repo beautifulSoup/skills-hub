@@ -1,0 +1,49 @@
+$ErrorActionPreference = 'Stop'
+
+# skills-hub install script
+# skill: {{ skill_name }} v{{ version_no }}
+# tool:  {{ tool_id }}  os: windows
+# target path template: {{ target_path }}
+
+$SkillName = "{{ skill_name }}"
+$TargetDir = "{{ target_path_expanded }}"
+$TargetDir = $TargetDir.TrimEnd('/','\')
+$ZipUrl    = "{{ download_url }}"
+
+Write-Host "Installing skill '$SkillName' to $TargetDir ..."
+
+# 1) 准备父目录
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $TargetDir) | Out-Null
+
+# 2) 覆盖已存在的同名 skill
+if (Test-Path $TargetDir) {
+    Remove-Item -Recurse -Force $TargetDir
+}
+
+# 3) 下载 + 解压到 tmp
+$Tmp = Join-Path $env:TEMP ("skills-hub-" + [System.IO.Path]::GetRandomFileName())
+New-Item -ItemType Directory -Force -Path $Tmp | Out-Null
+try {
+    $ZipPath = Join-Path $Tmp "skill.zip"
+    Invoke-WebRequest -Uri $ZipUrl -OutFile $ZipPath -UseBasicParsing
+    Expand-Archive -Path $ZipPath -DestinationPath $Tmp -Force
+
+    # 4) zip 内含单层根目录；探测实际目录名（与 $SkillName 可能存在大小写/拼写差异）
+    $Unzipped = Get-ChildItem -Path $Tmp -Directory | Select-Object -First 1
+    if (-not $Unzipped) {
+        Write-Error "zip 内未找到顶层目录"
+        exit 1
+    }
+    Move-Item -Path $Unzipped.FullName -Destination $TargetDir
+} finally {
+    Remove-Item -Recurse -Force $Tmp -ErrorAction SilentlyContinue
+}
+
+# 5) 验证 SKILL.md
+$SkillMd = Join-Path $TargetDir "SKILL.md"
+if (-not (Test-Path $SkillMd)) {
+    Write-Error "SKILL.md missing in $TargetDir"
+    exit 1
+}
+
+Write-Host "OK Installed $SkillName -> $TargetDir"

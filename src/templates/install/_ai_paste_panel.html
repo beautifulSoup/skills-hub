@@ -1,0 +1,24 @@
+<div class="space-y-2">
+  <div class="flex items-start gap-2">
+    <pre class="flex-1 bg-base-200 border border-base-300 rounded-md p-3 text-xs whitespace-pre-wrap" x-text="aiPasteText"></pre>
+    <button type="button"
+            @click="copyText(aiPasteText, 'ai')"
+            :class="copiedKey==='ai' ? 'bg-success text-success-content' : (copyError==='ai' ? 'bg-error text-error-content' : 'bg-primary text-primary-content')"
+            class="px-3 py-2 text-xs rounded-md hover:opacity-90 transition flex-shrink-0 min-w-[5.5rem] text-center">
+      <span x-show="copiedKey!=='ai' && copyError!=='ai'">📋 复制</span>
+      <span x-show="copiedKey==='ai'" x-cloak>✓ 已复制</span>
+      <span x-show="copyError==='ai'" x-cloak>× 失败</span>
+    </button>
+  </div>
+  <p class="text-xs text-base-content/50">复制后粘贴到所选工具的对话框，AI 会按提示帮你拉取并安装。</p>
+
+  <div x-show="tool==='claude-code'" x-cloak class="text-xs bg-info/5 border border-info/30 rounded-md px-3 py-2 leading-relaxed">
+    <strong class="text-info">💡 Claude Code 用户：</strong>
+    <code>auto</code> 模式下 <code>curl | bash</code> 这类远程脚本可能被拦截；切到 <code>default</code> 或 <code>accept edits</code> 模式（<kbd class="font-mono px-1 py-0.5 bg-base-200 border border-base-300 rounded text-[10px]">Shift</kbd>+<kbd class="font-mono px-1 py-0.5 bg-base-200 border border-base-300 rounded text-[10px]">Tab</kbd> 循环切换）即可正常执行。
+  </div>
+
+  <div x-show="tool==='workbuddy'" x-cloak class="text-xs bg-info/5 border border-info/30 rounded-md px-3 py-2 leading-relaxed">
+    <strong class="text-info">💡 WorkBuddy 用户：</strong>
+    把上面的提示词粘贴到 WorkBuddy 对话框，按其提示确认后即会安装到 <code>~/.workbuddy/skills/</code>。如果不便用 AI 执行，可改用上方的「命令行」或「手动下载」方式。
+  </div>
+</div>

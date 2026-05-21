@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}登录 — skills-hub{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-16 flex justify-center">
+  <div class="w-full max-w-sm bg-base-100 border border-base-300 rounded-xl p-8">
+    <div class="w-12 h-12 mx-auto mb-5 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center">
+      <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M22 11l-3 3-2-2M12 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/>
+      </svg>
+    </div>
+    <h1 class="text-xl font-bold text-center mb-1">登录 skills-hub</h1>
+    <p class="text-sm text-base-content/60 text-center mb-6">使用企业邮箱收取验证码</p>
+
+    <div id="form-area">
+      <form hx-post="/login/request-otp"
+            hx-target="#form-area"
+            hx-swap="innerHTML"
+            class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label for="id_email" class="block text-xs font-medium text-base-content/70 mb-1.5">邮箱</label>
+          <input type="email"
+                 name="email"
+                 id="id_email"
+                 placeholder="your@company.com"
+                 autofocus
+                 required
+                 class="w-full px-3 py-2 text-sm bg-base-100 border border-base-300 rounded-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-base-content/30">
+        </div>
+        <div id="error-area"></div>
+        <button type="submit"
+                class="w-full px-4 py-2 text-sm bg-primary text-primary-content font-medium rounded-md hover:opacity-90 transition">
+          发送验证码
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+[project]
+name = "skills-hub"
+version = "0.1.0"
+description = "企业私有 AI 工具仓库（skill / subagent 内部市场）"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=5.0,<6.0",
+    "django-environ>=0.11",
+    "celery>=5.3,<6.0",
+    "redis>=5.0",
+    "python-json-logger>=2.0",
+    "PyMySQL>=1.1",
+    "cryptography>=42.0",
+    "gunicorn>=23.0",
+    "watchdog>=4.0",
+    "PyYAML>=6.0",
+    "oss2>=2.18",
+    "markdown>=3.5,<4",
+    "bleach>=6.0,<8",
+    "django-unfold>=0.93.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-django>=4.8",
+    "ruff>=0.5",
+    "freezegun>=1.5",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "skillshub.core.settings"
+python_files = ["test_*.py"]
+testpaths = ["tests", "skillshub"]   # 根 tests/ + 各 app 内 tests/（Django 惯例）
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"

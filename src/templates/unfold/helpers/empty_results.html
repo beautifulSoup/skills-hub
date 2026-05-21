@@ -1,0 +1,25 @@
+{% load admin_urls i18n %}
+
+<div class="bg-white border border-base-200 flex flex-col items-center px-8 shadow-xs dark:bg-base-900 dark:border-base-800 {% if cl.search_fields %}rounded-b-default{% else %}rounded-default{% endif %} {% if cl.is_dataset %}py-16{% else %}py-24{% endif %}">
+    {% if not cl.is_dataset %}
+        <div class="border border-base-300 border-dashed flex h-24 items-center justify-center mb-8 rounded-full w-24 dark:border-base-700">
+            <span class="material-symbols-outlined text-base-500 text-5xl! dark:text-base-400">inbox</span>
+        </div>
+    {% endif %}
+
+    <h2 class="font-semibold mb-1 text-xl text-font-important-light tracking-tight dark:text-font-important-dark">
+        没有找到匹配的结果
+    </h2>
+
+    <p class="mb-6 text-center">
+        当前条件下没有数据，试着调整筛选条件或清空搜索。
+    </p>
+
+    {% if cl.has_filters or cl.query %}
+        <div class="flex flex-col gap-4 justify-center w-full lg:flex-row">
+            <a href="?" class="border border-base-200 flex flex-row font-medium gap-2 group/button h-[38px] items-center justify-center px-3 py-2 rounded-default w-full hover:text-primary-600 lg:w-auto dark:border-base-700 dark:hover:bg-base-900 dark:hover:text-primary-500">
+                <span class="material-symbols-outlined ml-1">filter_list_off</span> 重置筛选
+            </a>
+        </div>
+    {% endif %}
+</div>

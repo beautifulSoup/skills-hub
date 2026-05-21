@@ -1,0 +1,73 @@
+<p class="text-sm text-base-content/70 mb-4">验证码已发送到 <strong class="text-base-content font-medium">{{ email }}</strong>，请查收邮件。</p>
+<form hx-post="/login/verify"
+      hx-target="#error-area"
+      hx-swap="innerHTML"
+      class="space-y-4">
+  {% csrf_token %}
+  <input type="hidden" name="email" value="{{ email }}">
+  <div>
+    <label class="block text-xs font-medium text-base-content/70 mb-1.5">验证码</label>
+    <input type="hidden" name="code" required>
+    <div class="otp-group flex gap-2 justify-center">
+      {% for _ in "012345" %}
+      <input type="text"
+             inputmode="numeric"
+             maxlength="1"
+             autocomplete="off"
+             class="otp-box flex-1 min-w-0 aspect-square text-2xl font-mono text-center bg-base-100 border border-base-300 rounded-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+      {% endfor %}
+    </div>
+  </div>
+  <div id="error-area"></div>
+  <button type="submit"
+          class="w-full px-4 py-2 text-sm bg-primary text-primary-content font-medium rounded-md hover:opacity-90 transition">
+    验证登录
+  </button>
+</form>
+
+<script>
+  (function () {
+    var form = document.querySelector("#form-area form");
+    if (!form) return;
+    var boxes = Array.prototype.slice.call(form.querySelectorAll(".otp-box"));
+    var hidden = form.querySelector('input[name="code"]');
+    if (!boxes.length || !hidden) return;
+
+    function sync() {
+      hidden.value = boxes.map(function (b) { return b.value; }).join("");
+    }
+
+    boxes.forEach(function (box) {
+      box.addEventListener("input", function (e) {
+        e.target.value = e.target.value.replace(/\D/g, "").slice(-1);
+        sync();
+        var next = e.target.nextElementSibling;
+        if (e.target.value && next && next.classList.contains("otp-box")) {
+          next.focus();
+        }
+      });
+      box.addEventListener("keydown", function (e) {
+        if (e.key === "Backspace" && !e.target.value) {
+          var prev = e.target.previousElementSibling;
+          if (prev && prev.classList.contains("otp-box")) {
+            prev.focus();
+            e.preventDefault();
+          }
+        }
+      });
+      box.addEventListener("focus", function (e) { e.target.select(); });
+    });
+
+    form.addEventListener("paste", function (e) {
+      var digits = ((e.clipboardData || window.clipboardData).getData("text") || "")
+        .replace(/\D/g, "").slice(0, 6);
+      if (!digits) return;
+      e.preventDefault();
+      boxes.forEach(function (b, i) { b.value = digits[i] || ""; });
+      sync();
+      boxes[Math.min(digits.length, boxes.length - 1)].focus();
+    });
+
+    boxes[0].focus();
+  })();
+</script>

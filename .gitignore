@@ -1,0 +1,59 @@
+# Claude Code 用户本地设置（不入库）
+# 注意：.claude/commands/ 和 .claude/skills/ 是项目共享工具，需提交
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual env
+.venv/
+venv/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/media/
+
+# Env
+.env
+.env.local
+
+# Frontend
+tailwindcss
+tailwindcss-*
+src/node_modules/
+
+# Storage（runtime data）
+data/storage/*
+!data/storage/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ruff
+.ruff_cache/
+
+# uv
+.uv/
+.gstack/

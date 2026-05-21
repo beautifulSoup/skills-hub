@@ -1,0 +1,105 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ skill.name }} 版本列表{% endblock %}
+
+{% block content %}
+{# 状态卡片 #}
+<div class="bg-white border border-base-200 mb-6 px-5 py-4 rounded-default shadow-xs dark:bg-base-900 dark:border-base-800">
+    <div class="flex flex-row items-center justify-between gap-4">
+        <h2 class="font-semibold text-base text-important tracking-tight">版本清单</h2>
+        <p class="text-sm text-subtle">
+            共 {{ rows|length }} 个版本 · 当前 latest：v{{ skill.latest_version.version_no|default:"—" }}
+        </p>
+    </div>
+</div>
+
+{# 表格 #}
+<div class="bg-white border border-base-200 rounded-default shadow-xs overflow-x-auto dark:bg-base-900 dark:border-base-800">
+    <table class="w-full">
+        <thead class="bg-base-50 border-b border-base-200 dark:bg-base-800 dark:border-base-700">
+            <tr class="text-base-900 dark:text-base-100">
+                <th class="font-medium px-3 py-2.5 text-left text-sm">当前</th>
+                <th class="font-medium px-3 py-2.5 text-left text-sm">版本号</th>
+                <th class="font-medium px-3 py-2.5 text-left text-sm">状态</th>
+                <th class="font-medium px-3 py-2.5 text-left text-sm">版本上下线</th>
+                <th class="font-medium px-3 py-2.5 text-left text-sm">提交时间</th>
+                <th class="font-medium px-3 py-2.5 text-left text-sm">提交人</th>
+                <th class="font-medium px-3 py-2.5 text-left text-sm">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr class="border-t border-base-200 dark:border-base-800">
+                <td class="px-3 py-2.5 text-sm align-middle">
+                    {% if row.is_current %}
+                        <span class="bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-300 font-medium px-2 py-0.5 rounded-default text-xs whitespace-nowrap">✓ 当前版本</span>
+                    {% endif %}
+                </td>
+                <td class="px-3 py-2.5 text-sm align-middle">
+                    {% url 'admin:submit_skillversion_view' object_id=row.obj.pk as version_view_url %}
+                    <a href="{{ version_view_url }}" class="text-primary-600 hover:underline dark:text-primary-500 whitespace-nowrap">v{{ row.obj.version_no }}</a>
+                </td>
+                <td class="px-3 py-2.5 text-sm align-middle whitespace-nowrap">{{ row.obj.get_status_display }}</td>
+                <td class="px-3 py-2.5 text-sm align-middle whitespace-nowrap">
+                    {% if row.show_listing_toggle %}
+                        {% if row.is_available %}
+                            <span class="text-green-600 dark:text-green-500">可用</span>
+                        {% else %}
+                            <span class="text-red-600 dark:text-red-500">已下线</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-subtle">—</span>
+                    {% endif %}
+                </td>
+                <td class="px-3 py-2.5 text-sm align-middle whitespace-nowrap">{{ row.obj.submitted_at|date:"Y-m-d H:i" }}</td>
+                <td class="px-3 py-2.5 text-sm align-middle">{{ row.obj.submitted_by.email }}</td>
+                <td class="px-3 py-2.5 text-sm align-middle">
+                    <div class="flex flex-row flex-wrap gap-2">
+                        {% url 'admin:submit_skillversion_view' object_id=row.obj.pk as view_url %}
+                        <a href="{{ view_url }}"
+                           class="font-medium inline-flex items-center gap-1 rounded-default px-2.5 py-1.5 text-xs border border-base-200 bg-white text-important hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:hover:bg-base-800 whitespace-nowrap">
+                            查看
+                        </a>
+                        {% if row.can_rollback %}
+                            {% url 'admin:submit_version_action_dialog' object_id=row.obj.pk op='rollback' as rollback_url %}
+                            <a href="{{ rollback_url }}"
+                               hx-get="{{ rollback_url }}"
+                               hx-target="#modal-content"
+                               hx-select="#dialog"
+                               x-on:htmx:after-on-load="openModal = true"
+                               class="font-medium inline-flex items-center gap-1 rounded-default px-2.5 py-1.5 text-xs border border-base-200 bg-white text-important hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:hover:bg-base-800 cursor-pointer whitespace-nowrap">
+                                设为当前版本
+                            </a>
+                        {% endif %}
+                        {% if row.show_listing_toggle %}
+                            {% if row.is_available %}
+                                {% url 'admin:submit_version_action_dialog' object_id=row.obj.pk op='disable' as disable_url %}
+                                <a href="{{ disable_url }}"
+                                   hx-get="{{ disable_url }}"
+                                   hx-target="#modal-content"
+                                   hx-select="#dialog"
+                                   x-on:htmx:after-on-load="openModal = true"
+                                   class="font-medium inline-flex items-center gap-1 rounded-default px-2.5 py-1.5 text-xs border border-red-600 bg-red-600 text-white hover:bg-red-700 cursor-pointer whitespace-nowrap">
+                                    下线版本
+                                </a>
+                            {% else %}
+                                {% url 'admin:submit_version_action_dialog' object_id=row.obj.pk op='enable' as enable_url %}
+                                <a href="{{ enable_url }}"
+                                   hx-get="{{ enable_url }}"
+                                   hx-target="#modal-content"
+                                   hx-select="#dialog"
+                                   x-on:htmx:after-on-load="openModal = true"
+                                   class="font-medium inline-flex items-center gap-1 rounded-default px-2.5 py-1.5 text-xs bg-primary-600 text-white hover:bg-primary-700 cursor-pointer whitespace-nowrap">
+                                    上线版本
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

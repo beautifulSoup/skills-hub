@@ -1,0 +1,68 @@
+{% extends "admin/submit_line.html" %}
+{% load i18n admin_urls unfold %}
+
+{% block submit-row %}
+    {% if show_save %}
+        {% component "unfold/components/button.html" with submit=1 form=opts.model_name|add:"_form" name="_save" class="w-full lg:w-auto" %}
+            {% trans "Save" %}
+        {% endcomponent %}
+    {% endif %}
+
+    {% for action in actions_submit_line %}
+        {% component "unfold/components/button.html" with submit=1 form=opts.model_name|add:"_form" name=action.attrs.name|default:action.action_name variant="default" class="w-full lg:w-auto" attrs=action.attrs %}
+            {% if action.icon %}
+                <span class="material-symbols-outlined">{{ action.icon }}</span>
+            {% endif %}
+            {{ action.description }}
+        {% endcomponent %}
+    {% endfor %}
+
+    {% if show_save_and_continue %}
+        {% component "unfold/components/button.html" with submit=1 form=opts.model_name|add:"_form" name="_continue" variant="default" class="w-full lg:w-auto" %}
+            {% if can_change %}{% trans "Save and continue editing" %}{% else %}{% trans "Save and view" %}{% endif %}
+        {% endcomponent %}
+    {% endif %}
+
+    {% if show_save_and_add_another %}
+        {% component "unfold/components/button.html" with submit=1 form=opts.model_name|add:"_form" name="_addanother" variant="default" class="w-full lg:w-auto" %}
+            {% trans "Save and add another" %}
+        {% endcomponent %}
+    {% endif %}
+
+    {% if show_save_as_new %}
+        {% component "unfold/components/button.html" with submit=1 form=opts.model_name|add:"_form" name="_saveasnew" variant="default" class="w-full lg:w-auto" %}
+            {% trans "Save as new" %}
+        {% endcomponent %}
+    {% endif %}
+
+    <div class="flex flex-col gap-3 mr-auto w-full lg:flex-row lg:w-auto">
+        {% if show_close or adminform.model_admin.change_form_show_cancel_button %}
+            {% url opts|admin_urlname:'changelist' as changelist_url %}
+            {% add_preserved_filters changelist_url as link %}
+
+            {% component "unfold/components/button.html" with href=link variant="default" class="w-full lg:w-auto"%}
+                {% trans "Close" %}
+            {% endcomponent %}
+        {% endif %}
+
+        {% if original and listing_dialog_url %}
+            {% if original.is_listed %}
+                {% component "unfold/components/button.html" with href=listing_dialog_url variant="default" class="w-full lg:w-auto" extra_attrs=listing_dialog_attrs %}
+                    <span class="material-symbols-outlined">visibility_off</span>
+                    下线 Skill
+                {% endcomponent %}
+            {% else %}
+                {% component "unfold/components/button.html" with href=listing_dialog_url variant="default" class="w-full lg:w-auto" extra_attrs=listing_dialog_attrs %}
+                    <span class="material-symbols-outlined">visibility</span>
+                    上线 Skill
+                {% endcomponent %}
+            {% endif %}
+        {% endif %}
+
+        {% if show_delete_link and original and delete_dialog_url %}
+            {% component "unfold/components/button.html" with href=delete_dialog_url variant="danger" class="mr-auto w-full lg:w-auto" extra_attrs=delete_dialog_attrs %}
+                {% trans "Delete" %} {{ opts.verbose_name }}
+            {% endcomponent %}
+        {% endif %}
+    </div>
+{% endblock %}

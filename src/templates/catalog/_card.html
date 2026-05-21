@@ -1,0 +1,34 @@
+<a href="{% url 'catalog_detail' name=skill.name %}"
+   class="group flex flex-col h-60 bg-base-100 border border-base-300 rounded-xl p-5 hover:border-primary/30 hover:shadow-[0_6px_24px_rgba(124,58,237,0.10)] hover:-translate-y-0.5 transition">
+  <div class="flex items-start justify-between mb-4">
+    <div class="w-11 h-11 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-center">
+      <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m16 18 6-6-6-6M8 6l-6 6 6 6"/>
+      </svg>
+    </div>
+    {% if skill.latest_version %}
+      <span class="font-mono text-xs text-base-content/40">v{{ skill.latest_version.version_no }}</span>
+    {% endif %}
+  </div>
+  <h2 class="font-semibold mb-1.5 text-base-content group-hover:text-primary transition line-clamp-1">{{ skill.name }}</h2>
+  <p class="text-sm text-base-content/60 mb-3 line-clamp-1">{{ skill.description }}</p>
+  <div class="h-5 mb-3 overflow-hidden">
+    {% if skill.tags %}
+      <div class="flex flex-nowrap gap-1.5">
+        {% for tag in skill.tags %}
+          <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-primary/5 text-primary whitespace-nowrap flex-shrink-0">{{ tag }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+  <div class="flex items-center justify-between text-xs text-base-content/50 pt-3 border-t border-base-200 mt-auto">
+    <div class="flex items-center gap-1.5">
+      <div class="w-5 h-5 rounded-full bg-primary/20 border border-primary/30"></div>
+      <span>{{ skill.created_by.email|cut:"@example.com"|cut:"@" }}</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-warning">⚡ {{ skill.install_count }}</span>
+      <span class="font-mono">{{ skill.created_at|date:"Y-m-d" }}</span>
+    </div>
+  </div>
+</a>

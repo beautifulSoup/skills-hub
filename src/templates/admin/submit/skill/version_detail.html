@@ -1,0 +1,102 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}{{ version.skill.name }} v{{ version.version_no }} 版本详情{% endblock %}
+
+{% block content %}
+<div class="module" style="margin: 1em 0;">
+  <h1>{{ version.skill.name }} — v{{ version.version_no }} 版本详情</h1>
+  <p>
+    <a href="{% url 'admin:submit_skill_versions' object_id=version.skill_id %}">← 回版本列表</a>
+    ·
+    <a href="{% url 'admin:submit_skill_change' object_id=version.skill_id %}">Skill 主页</a>
+  </p>
+</div>
+
+<div class="module">
+  <h2>基本字段</h2>
+  <table>
+    <tbody>
+      <tr><th>Skill 名称</th><td>{{ version.skill.name }}</td></tr>
+      <tr><th>版本号</th><td>v{{ version.version_no }}</td></tr>
+      <tr><th>状态</th><td>{{ version.get_status_display }}</td></tr>
+      <tr><th>版本上下线</th><td>
+        {% if version.is_available %}
+          <span style="color:#16a34a">可用</span>
+        {% else %}
+          <span style="color:#b91c1c">已下线</span>
+        {% endif %}
+      </td></tr>
+      <tr><th>提交时间</th><td>{{ version.submitted_at|date:"Y-m-d H:i" }}</td></tr>
+      <tr><th>提交人</th><td>{{ version.submitted_by.email }}</td></tr>
+      <tr><th>发布时间</th><td>{{ version.published_at|date:"Y-m-d H:i"|default:"—" }}</td></tr>
+      <tr><th>SHA256</th><td><code>{{ version.sha256 }}</code></td></tr>
+      <tr><th>文件路径</th><td><code>{{ version.file_path }}</code></td></tr>
+      <tr><th>download_token</th><td><code>{{ version.download_token|default:"—" }}</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="module">
+  <h2>机审结果</h2>
+  <pre style="background:#f7f7f7;padding:1em;max-height:200px;overflow:auto;">{{ version.machine_review_result|default:"—" }}</pre>
+</div>
+
+<div class="module">
+  <h2>违规清单</h2>
+  {% if version.violations %}
+    <table>
+      <thead><tr><th>code</th><th>severity</th><th>message</th><th>location</th></tr></thead>
+      <tbody>
+        {% for v in version.violations %}
+        <tr>
+          <td>{{ v.code }}</td>
+          <td>{{ v.severity }}</td>
+          <td>{{ v.message }}</td>
+          <td>{{ v.location }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>无</p>
+  {% endif %}
+</div>
+
+<div class="module">
+  <h2>LLM 审核结果</h2>
+  <pre style="background:#f7f7f7;padding:1em;max-height:200px;overflow:auto;">{{ version.llm_review_result|default:"—" }}</pre>
+</div>
+
+<div class="module">
+  <h2>README</h2>
+  <pre style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;">{{ version.readme }}</pre>
+</div>
+
+<div class="module">
+  <h2>文件清单</h2>
+  <table>
+    <thead><tr><th>路径</th><th>大小</th><th>预览</th></tr></thead>
+    <tbody>
+      {% for entry in zip_entries %}
+      <tr>
+        <td>{{ entry.path }}</td>
+        <td>{{ entry.size }} B</td>
+        <td>
+          {% if entry.previewable %}
+            <button type="button"
+                    hx-get="{{ file_url_base }}?path={{ entry.path|urlencode }}"
+                    hx-target="#file-preview"
+                    hx-swap="innerHTML">查看</button>
+          {% else %}
+            <em>不可预览</em>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <pre id="file-preview" style="background:#f7f7f7;padding:1em;max-height:600px;overflow:auto;"></pre>
+</div>
+
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+{% endblock %}

@@ -1,0 +1,113 @@
+# skills-hub docker compose —— prod 基线（部署者用，只依赖 Docker）
+#
+# 中间件可在「内置 / 外部」间自由组合。内置服务都挂在 profile 后，默认不启动；
+# 要用内置就加对应 profile，要用外部就在 deploy/.env 里把连接串指向外部地址。
+#
+# 全内置（POC / 无外部 RDS·Redis）：
+#   docker compose -f deploy/docker-compose.yml \
+#     --profile bundled-mysql --profile bundled-redis up -d
+#
+# 全外部（生产推荐，.env 设 DB_HOST / REDIS_URL 指向外部）：
+#   docker compose -f deploy/docker-compose.yml up -d
+#
+# 也可只内置其一，如内置 MySQL + 外部 Redis：只加 --profile bundled-mysql。
+#
+# 本地开发（叠加 dev 覆盖：挂载源码即时生效，需先 make tailwind 编译 CSS）：
+#   见 deploy/docker-compose.dev.yml；惯用 `make up`。
+
+services:
+  redis:
+    profiles: ["bundled-redis"]   # 内置 Redis；用外部 Redis 时不加此 profile，并在 .env 设 REDIS_URL
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  web:
+    build:
+      context: ..                # build context = repo root（让 COPY src/ 看得到）
+      dockerfile: deploy/Dockerfile
+    # 启动顺序：migrate（幂等 / Django manage.py）→ exec gunicorn 接 PID 1
+    # 首次起 / 升级跑 schema 迁移；既有部署 migrate 是 noop
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+      exec gunicorn skillshub.core.wsgi
+      --workers 4
+      --bind 0.0.0.0:8000
+      --access-logfile -
+      --error-logfile -"
+    env_file: .env               # 相对 compose 文件位置 = deploy/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      # prod 用镜像 baked 的代码 + 已编译 output.css，不挂源码（部署者无需装 Node）；
+      # 本地开发的源码挂载见 docker-compose.dev.yml
+      - "../data/storage:/app/data/storage"
+      - "../config:/config:ro"   # tools.yaml（TOOLS_YAML_PATH 默认 /config/tools.yaml）；image 不带 repo 根的 config/
+    depends_on:
+      redis:
+        condition: service_healthy
+        required: false          # 外部 Redis 形态时 redis 服务未启动，跳过此依赖
+      mysql:
+        condition: service_healthy
+        required: false          # external-rds 形态时 mysql 服务未启动，跳过此依赖
+    healthcheck:
+      test: ["CMD", "curl", "-fsSL", "http://localhost:8000/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    command: celery -A skillshub.core worker -l INFO   # dev 改代码后跑 `docker compose restart worker` 即可；autoreload 不在 MVP 范围
+    env_file: .env
+    volumes:
+      # prod 用镜像 baked 代码；本地开发的源码挂载见 docker-compose.dev.yml
+      - "../data/storage:/app/data/storage"
+    depends_on:
+      redis:
+        condition: service_healthy
+        required: false
+      mysql:
+        condition: service_healthy
+        required: false
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A skillshub.core inspect ping -d celery@$$HOSTNAME"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  mysql:
+    profiles: ["bundled-mysql"]
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  redis_data:
+  mysql_data:

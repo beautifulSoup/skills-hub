@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# skills-hub install script
+# skill: {{ skill_name }} v{{ version_no }}
+# tool:  {{ tool_id }}    os: {{ os }}
+# target path template: {{ target_path }}
+
+SKILL_NAME="{{ skill_name }}"
+TARGET_DIR="{{ target_path_expanded }}"
+TARGET_DIR="${TARGET_DIR%/}"
+ZIP_URL="{{ download_url }}"
+
+echo "Installing skill '$SKILL_NAME' to $TARGET_DIR ..."
+
+# 1) 准备父目录
+mkdir -p "$(dirname "$TARGET_DIR")"
+
+# 2) 覆盖已存在的同名 skill
+[ -d "$TARGET_DIR" ] && rm -rf "$TARGET_DIR"
+
+# 3) 下载 + 解压
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+curl -fsSL "$ZIP_URL" -o "$TMP/skill.zip"
+unzip -q "$TMP/skill.zip" -d "$TMP"
+
+# 4) zip 内含单层根目录；探测实际目录名（与 $SKILL_NAME 可能存在大小写/拼写差异）
+UNZIPPED_DIR=$(find "$TMP" -mindepth 1 -maxdepth 1 -type d ! -path "$TMP" -print | head -n 1)
+if [ -z "$UNZIPPED_DIR" ]; then
+  echo "ERROR: zip 内未找到顶层目录" >&2
+  exit 1
+fi
+mv "$UNZIPPED_DIR" "$TARGET_DIR"
+
+# 5) 验证 SKILL.md
+[ -f "$TARGET_DIR/SKILL.md" ] || { echo "ERROR: SKILL.md missing in $TARGET_DIR" >&2; exit 1; }
+
+echo "✓ Installed $SKILL_NAME → $TARGET_DIR"

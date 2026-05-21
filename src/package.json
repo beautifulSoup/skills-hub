@@ -1,0 +1,15 @@
+{
+  "name": "skills-hub-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "skills-hub Tailwind + DaisyUI build pipeline",
+  "scripts": {
+    "build": "npx @tailwindcss/cli -i static/css/input.css -o static/css/output.css --minify",
+    "watch": "npx @tailwindcss/cli -i static/css/input.css -o static/css/output.css --watch --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0",
+    "daisyui": "^5.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}

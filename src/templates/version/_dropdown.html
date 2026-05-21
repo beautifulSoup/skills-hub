@@ -1,0 +1,11 @@
+<form method="get" class="inline-block">
+  <select name="v"
+          onchange="this.form.submit()"
+          class="px-4 py-2 text-sm bg-base-100 border border-base-300 rounded-md cursor-pointer focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+    {% for v in versions %}
+      <option value="{{ v.version_no }}"{% if current_version and v.id == current_version.id %} selected{% endif %}>
+        v{{ v.version_no }}{% if v.id == latest_id %}（最新已发布）{% endif %}
+      </option>
+    {% endfor %}
+  </select>
+</form>

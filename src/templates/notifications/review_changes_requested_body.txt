@@ -1,0 +1,6 @@
+您提交的 {{ skill_name }} v{{ version_no }} 需要修改后重新提交。
+
+改动点：
+{{ reason }}
+
+详情：{{ review_url }}
