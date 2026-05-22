@@ -115,7 +115,14 @@ INITIAL_ADMIN_EMAILS=admin1@example.com,admin2@example.com
 # 存储后端
 STORAGE_BACKEND=local              # 或 aliyun_oss
 STORAGE_LOCAL_ROOT=/app/data/storage
+
+# Demo 路由（T1 烟雾测试用的 /demo* 路由是否暴露）
+EXPOSE_DEMO=False                  # 生产必须 False；.env.example 默认 True 仅为本地试用
 ```
+
+> **登录依赖 SMTP**：OTP 验证码通过邮件下发，所以 `SMTP_*` 没配好就无法登录。
+> 纯 POC（暂不接 SMTP）想先体验登录，可在 `DJANGO_DEBUG=True` 下从数据库取码：
+> `docker compose -f deploy/docker-compose.yml exec web python manage.py shell -c "from skillshub.accounts.models import OtpCode; o=OtpCode.objects.order_by('-id').first(); print(o.email, o.code)"`
 
 生成 `DJANGO_SECRET_KEY`：
 
@@ -144,6 +151,8 @@ docker compose -f deploy/docker-compose.yml --profile bundled-mysql up -d --buil
 
 等 60 秒左右（mysql 冷启动 ~20s，web healthcheck 等 mysql healthy 再起）。
 
+> **首次启动**：fresh volume 下 mysql 要先做一次数据库初始化（含临时 server 重启）。若 web/worker 在这个窗口尝试连库失败退出，`restart: unless-stopped` 会自动把它们拉起来，mysql 真正就绪后即恢复——首启看到 web 重启一两次属正常，最终 `docker compose ps` 显示 `healthy` 即可。
+
 观察日志：
 
 ```bash
@@ -159,8 +168,10 @@ curl http://localhost:8000/healthz
 期望返回 200 + JSON：
 
 ```json
-{"db": "ok", "redis": "ok"}
+{"status": "ok", "checks": {"db": "ok", "redis": "ok"}}
 ```
+
+> 任一依赖不通时返回 503，`status` 变 `degraded`，对应 check 显示 `fail: <原因>`。
 
 如果不通，跳到 [9. 常见排错](#9-常见排错)。
 
@@ -210,6 +221,7 @@ u.is_superuser = True; u.save()
 - [ ] `SMTP_*` 全配 + 测试发件成功（OTP / 审核邮件依赖）
 - [ ] `EMAIL_DOMAIN_WHITELIST` 设公司邮箱后缀，**禁止**留空（留空 = 任何邮箱都能登）
 - [ ] `INITIAL_ADMIN_EMAILS` 填实际管理员邮箱
+- [ ] `EXPOSE_DEMO=False`（关掉 T1 烟雾测试的 `/demo*` 路由）
 - [ ] 反向代理（nginx / Caddy / Traefik）+ HTTPS（Let's Encrypt / 企业 CA）
 - [ ] DB 备份策略（RDS 自动快照 / 自建定时 mysqldump）
 - [ ] 监控 `/healthz` + 日志收集（prometheus / loki / 企业内部监控）
@@ -226,6 +238,7 @@ docker compose logs web | tail -50
 - DB 连接失败 → 检查 `DB_HOST` / `DB_PORT` / 网络（bundled 形态 `DB_HOST=mysql`，external 形态填 RDS endpoint）
 - migrate 没跑 → web 容器启动会自动 migrate，看 logs 是否有 `Operations to perform: Apply all migrations` + `OK`
 - gunicorn worker 全 crash → logs 顶部找 traceback；常见是 secret key 没设 / settings.py 加载失败
+- 首启时 web 反复重启 → 多为等 mysql 初始化（见第 4 节说明），`restart` 策略会自愈；持续 1 分钟以上不恢复再查 mysql（跳 9.2）
 
 ### 9.2 mysql healthcheck 一直 unhealthy（bundled 形态）
 

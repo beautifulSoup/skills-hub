@@ -18,6 +18,7 @@
 services:
   redis:
     profiles: ["bundled-redis"]   # 内置 Redis；用外部 Redis 时不加此 profile，并在 .env 设 REDIS_URL
+    restart: unless-stopped
     image: redis:7-alpine
     ports:
       - "6379:6379"
@@ -31,6 +32,7 @@ services:
       start_period: 5s
 
   web:
+    restart: unless-stopped      # 首次启动 mysql 初始化竞态 / 宿主重启后自愈
     build:
       context: ..                # build context = repo root（让 COPY src/ 看得到）
       dockerfile: deploy/Dockerfile
@@ -66,6 +68,7 @@ services:
       start_period: 15s
 
   worker:
+    restart: unless-stopped      # 同 web：首启竞态 / 宿主重启后自愈
     build:
       context: ..
       dockerfile: deploy/Dockerfile
@@ -90,6 +93,7 @@ services:
 
   mysql:
     profiles: ["bundled-mysql"]
+    restart: unless-stopped
     image: mysql:8.4
     environment:
       MYSQL_DATABASE: ${DB_NAME}
