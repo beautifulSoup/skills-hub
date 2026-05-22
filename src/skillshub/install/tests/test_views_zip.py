@@ -2,6 +2,7 @@
 from unittest.mock import patch
 import pytest
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 
 from skillshub.submit.models import Skill, SkillVersion
 
@@ -27,7 +28,8 @@ def _make_published(author, name="foo", token="zip-token-xxxxxxxxxxx"):
     return v
 
 
-def test_zip_returns_302_redirect_to_storage_url(client, author):
+@override_settings(STORAGE_BACKEND="aliyun_oss")
+def test_zip_remote_backend_302_redirect(client, author):
     v = _make_published(author, name="foo", token="zip-token-xxxxxxxxxxx")
     with patch("skillshub.install.views.get_storage") as mock_get_storage:
         mock_get_storage.return_value.url.return_value = "https://cdn.example.com/skills/foo/v1.zip"
@@ -35,6 +37,19 @@ def test_zip_returns_302_redirect_to_storage_url(client, author):
     assert resp.status_code == 302
     assert resp["Location"] == "https://cdn.example.com/skills/foo/v1.zip"
     mock_get_storage.return_value.url.assert_called_once_with("skills/foo/v1.zip")
+
+
+@override_settings(STORAGE_BACKEND="local")
+def test_zip_local_backend_streams_content(client, author):
+    v = _make_published(author, name="foo", token="zip-token-xxxxxxxxxxx")
+    with patch("skillshub.install.views.get_storage") as mock_get_storage:
+        mock_get_storage.return_value.get.return_value = b"PK\x03\x04zipbytes"
+        resp = client.get(f"/install/{v.download_token}/zip")
+    assert resp.status_code == 200
+    assert resp["Content-Type"] == "application/zip"
+    assert resp.content == b"PK\x03\x04zipbytes"
+    assert "attachment" in resp["Content-Disposition"]
+    mock_get_storage.return_value.get.assert_called_once_with("skills/foo/v1.zip")
 
 
 def test_zip_pending_version_404(client, author):

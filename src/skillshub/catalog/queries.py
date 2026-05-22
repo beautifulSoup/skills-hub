@@ -21,6 +21,11 @@ SORT_OPTIONS = {
 DEFAULT_SORT = "installs"
 
 
+def count_listed_skills() -> int:
+    """目录页可浏览的 skill 总数（有 published 版本 + is_listed），不受搜索/分页影响。"""
+    return Skill.objects.filter(latest_version__isnull=False, is_listed=True).count()
+
+
 def list_skills(q: str = "", tags: list = None, sort: str = DEFAULT_SORT, page: int = 1):
     """返回 (skills_list, has_next)。
 

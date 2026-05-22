@@ -10,6 +10,7 @@ from skillshub.catalog.markdown_render import render_readme
 from skillshub.catalog.queries import (
     DEFAULT_SORT,
     SORT_OPTIONS,
+    count_listed_skills,
     list_skills,
 )
 from skillshub.install.ua import guess_os
@@ -51,6 +52,7 @@ def list_view(request):
         "tags": tags,
         "sort": sort,
         "sort_options": SORT_OPTIONS.keys(),
+        "catalog_count": count_listed_skills(),
     }
 
     if request.headers.get("HX-Request") == "true":

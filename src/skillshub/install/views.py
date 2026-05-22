@@ -1,6 +1,7 @@
 """Install 视图 (T10): 渲染安装脚本 + 重定向 manual zip."""
 import logging
 
+from django.conf import settings
 from django.db.models import F
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -93,5 +94,12 @@ def install_zip_view(request, token):
         is_available=True,
     )
     _increment_install_count(version.skill_id)
-    url = get_storage().url(version.file_path)
-    return HttpResponseRedirect(url)
+    storage = get_storage()
+    if settings.STORAGE_BACKEND == "local":
+        # 本地存储：经 token 校验后由视图流式返回，不暴露 /media/
+        # （prod DEBUG=False 下 Django 不 serve /media/，且直开 /media/ 会绕过 token）
+        resp = HttpResponse(storage.get(version.file_path), content_type="application/zip")
+        resp["Content-Disposition"] = f'attachment; filename="{version.skill.name}.zip"'
+        return resp
+    # 远程对象存储（OSS 等）：重定向到其 URL，下载交给对象存储
+    return HttpResponseRedirect(storage.url(version.file_path))

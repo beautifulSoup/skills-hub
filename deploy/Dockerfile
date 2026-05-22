@@ -1,7 +1,7 @@
-# syntax=docker/dockerfile:1.7
-#
 # Build context = repo root (set by docker-compose.yml's `build.context: ..`)
 # 所有 COPY path 都相对 root；只 copy src/ 进 image，不带 docs/spec/openspec 等
+# 注：不用 `# syntax=` 指令——它会让 BuildKit 去 Docker Hub 拉前端镜像，公司内网不通；
+#     本 Dockerfile 仅用标准多阶段语法，默认前端即可。
 
 # ============================================================
 # Stage 1: frontend（node:20-alpine 构建 Tailwind + DaisyUI CSS）
