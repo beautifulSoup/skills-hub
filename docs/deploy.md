@@ -71,6 +71,11 @@ DB_USER=skillshub
 DB_PASSWORD=<RDS 账号密码>
 ```
 
+> **上真 RDS 前确认三点**（本地内置 mysql 测不到、连真实 RDS 才会遇到）：
+> - **网络 / 白名单**：RDS 安全组要放行 web 所在网段访问 3306，否则 web 启动卡在连库。
+> - **账号权限**：首次启动要跑 migrate（建表 + 索引），`DB_USER` 需要目标库的 `CREATE` / `ALTER` / `INDEX` 权限；用受限子账号时先确认权限够。
+> - **字符集**：建库时用 `utf8mb4` + `utf8mb4_unicode_ci`，否则 skill 全文检索处理中文会出问题（建库语句：`CREATE DATABASE skillshub CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`）。
+
 ### 3.3 Redis（内置 / 外部）
 
 `.env.example` 默认未注释段是**内置 Redis**（启动时加 `--profile bundled-redis`）：
