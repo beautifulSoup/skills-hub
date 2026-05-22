@@ -311,6 +311,27 @@ docker compose ps
 
 参考各社区配置；本文档不一一展开（自托管用户生态各异）。
 
+## 11. Kubernetes 部署（非官方支持）
+
+skills-hub **官方只支持 docker compose**，不维护 Helm chart / K8s manifests。但 app 本身是一套**标准无状态 Web 栈**（Django + gunicorn + MySQL + Redis + Celery worker），天然适配 K8s——下面给出关键约束，你可以据此自己写 manifests，或欢迎社区贡献 Helm chart。
+
+最快起步：用 [`kompose`](https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/) 把 compose 转成 manifests 当骨架，再按下面几点改造。
+
+**搬上 K8s 时需要注意的点：**
+
+| 维度 | 要点 |
+|---|---|
+| **配置 / 密钥** | 普通配置（`DJANGO_ALLOWED_HOSTS` / `BASE_URL` / `STORAGE_*` 等）放 ConfigMap；敏感值（`DJANGO_SECRET_KEY` / `DB_PASSWORD` / `SMTP_PASSWORD`）放 Secret，**勿写进镜像或 ConfigMap**。 |
+| **静态文件** | 无需单独 nginx serve static——镜像内置 whitenoise 直接服务 `/static/`，web 容器即可对外。 |
+| **migrate / collectstatic** | web 启动需先 `migrate` + `collectstatic`。多副本时建议拆成 initContainer 或单独 Job，避免多 Pod 并发 migrate。 |
+| **MySQL** | 生产建议直接用云 RDS（设 `DB_*` 指向外部），不要在集群里自管有状态库；若坚持集群内自管，用 StatefulSet + 持久卷。 |
+| **Redis** | 仅作 Celery broker/result，无持久数据，单实例 Deployment 即可（无需持久卷）。 |
+| **存储后端（决定能否多副本）** | `STORAGE_BACKEND=local` 用本地盘时，web 与 worker 必须共享同一卷——块存储（RWO）只能挂一个 Pod，会把 web 锁死单副本。**要 web 多副本，请用 `STORAGE_BACKEND=aliyun_oss`**（无共享卷，web/worker 各自无状态可任意扩缩）。 |
+| **worker** | Celery worker 与 web 同镜像、换启动命令（`celery -A skillshub.core worker -l INFO`）。用 OSS 存储时 worker 可独立 Deployment；用本地盘时 worker 必须与 web 共享存储卷（同 Pod 多容器，或 RWX 卷）。 |
+| **健康探针** | 探针打 `/healthz`。注意 kube-probe 默认用 Pod IP 作 Host，会被 `DJANGO_ALLOWED_HOSTS` 拦 400——给 httpGet 探针加 `Host` 头指向允许的域名。 |
+
+> 上面这些是 skills-hub 在生产 K8s 上跑出来的通用经验。具体 manifests 不随项目分发，因为存储类 / ingress / 镜像仓 / 域名高度依赖你自己的集群环境。
+
 ---
 
 ## 附：升级 skills-hub
